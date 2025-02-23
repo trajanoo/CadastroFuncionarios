@@ -1,5 +1,7 @@
 package com.taskManager.CadastroFuncionario.Funcionarios;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,32 +19,61 @@ public class FuncionarioController {
 
     // Create:
     @PostMapping("/criar")
-    public FuncionarioDTO criar(@RequestBody FuncionarioDTO funcionario) {
-        return funcionarioService.criarFuncionario(funcionario);
+    public ResponseEntity<String> criar(@RequestBody FuncionarioDTO funcionario) {
+        FuncionarioDTO funcionarioDTO = funcionarioService.criarFuncionario(funcionario);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("O funcionario " + funcionario.getNome() + " foi criado com sucesso!");
     }
 
     // Read:
     @GetMapping("/listar")
-    public List<FuncionarioDTO> listar() {
-        return funcionarioService.listarTodos();
+    public ResponseEntity<List<FuncionarioDTO>> listar() {
+        List<FuncionarioDTO> funcionarioLista = funcionarioService.listarTodos();
+
+        return ResponseEntity.ok(funcionarioLista);
     }
 
     // Read by ID:
     @GetMapping("/listar/{id}")
-    public FuncionarioDTO listarID(@PathVariable Long id) {
-        return funcionarioService.listarPorID(id);
+    public ResponseEntity<?> listarID(@PathVariable Long id) {
+
+        FuncionarioDTO funcionario = funcionarioService.listarPorID(id);
+
+        if(funcionario != null) {
+            return ResponseEntity.ok()
+                    .body(funcionario);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Erro! O id: " + id + " não foi encontrado.");
+        }
     }
 
     // Update:
     @PutMapping("/alterar/{id}")
-    public FuncionarioDTO alterar(@PathVariable Long id, @RequestBody FuncionarioDTO novoFuncionario) {
-        return funcionarioService.atualizarFuncionario(id, novoFuncionario);
+    public ResponseEntity<?> alterar(@PathVariable Long id, @RequestBody FuncionarioDTO novoFuncionario) {
+
+        FuncionarioDTO funcionario = funcionarioService.listarPorID(id);
+
+        if(funcionario != null) {
+            FuncionarioDTO funcionarioAtt = funcionarioService.atualizarFuncionario(id, novoFuncionario);
+            return ResponseEntity.ok(funcionarioAtt);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Erro! O id: " + id + " não foi encontrado.");
+        }
     }
 
     // Delete:
     @DeleteMapping("/remover/{id}")
-    public void removerID(@PathVariable Long id) {
-        funcionarioService.removerFuncionario(id);
-    }
+    public ResponseEntity<String> removerID(@PathVariable Long id) {
+        if(funcionarioService.listarPorID(id) != null) {
+            funcionarioService.removerFuncionario(id);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                    .body("O ID: " + id + " foi deletado com sucesso!");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Erro! O id: " + id + " não foi encontrado.");
+        }
 
+    }
 }
